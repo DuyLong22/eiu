@@ -158,38 +158,37 @@ for (let i = 0; i < smallHeartCount; i++) {
 
 function animate() {
   requestAnimationFrame(animate);
-  const delta = clock.getDelta();
+  const delta = clock.getDelta(); // Thời gian trôi qua giữa 2 frame (đơn vị: giây)
 
   smallHearts.forEach(h => {
-  h.rotation.y += 0.02; // xoay trái tim
-  h.position.y -= 0.07; // tốc độ rơi y hệt chữ
+    h.rotation.y += 0.02;
+    h.position.y -= 5 * delta; // dùng delta để điều chỉnh tốc độ rơi
 
-  // nếu trái tim rơi xuống dưới, đặt lại vị trí lên trên giống chữ rơi
-  if (h.position.y < -heightRange / 2) {
-    h.position.y = heightRange / 2;
-    h.position.x = (Math.random() - 0.5) * smallHeartRange;
-    h.position.z = (Math.random() - 0.5) * smallHeartRange;
+    if (h.position.y < -heightRange / 2) {
+      h.position.y = heightRange / 2;
+      h.position.x = (Math.random() - 0.5) * smallHeartRange;
+      h.position.z = (Math.random() - 0.5) * smallHeartRange;
 
-    // Có thể thay đổi scale nhỏ trái tim để tạo sự đa dạng
-    const scaleFactor = 0.1 + Math.random() * 0.05;
-    h.scale.set(scaleFactor, scaleFactor, scaleFactor);
-  }
+      const scaleFactor = 0.1 + Math.random() * 0.05;
+      h.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    }
 
-  // Hiệu ứng nhấp nháy sáng như chữ
-  h.material.emissiveIntensity = 1.2 + Math.sin(Date.now() * 0.005 + h.position.x) * 0.4;
-});
+    h.material.emissiveIntensity = 1.2 + Math.sin(Date.now() * 0.005 + h.position.x) * 0.4;
+  });
 
-  // Chữ rơi và nhấp nháy sáng
   texts.forEach(text => {
-    text.position.y -= 0.05;
+    text.position.y -= 3 * delta; // tốc độ rơi của chữ (có thể chỉnh 3 thành lớn hơn nếu muốn nhanh hơn)
+
     if (text.position.y < -heightRange / 2) {
       text.position.y = heightRange / 2;
       text.position.x = (Math.random() - 0.5) * rangeX;
       text.position.z = (Math.random() - 0.5) * rangeZ;
+
       const zPos = text.position.z;
       const scaleFactor = 1.5 - Math.abs(zPos) * 0.2;
       text.scale.set(scaleFactor, scaleFactor, scaleFactor);
     }
+
     text.material.emissiveIntensity = 1.2 + Math.sin(Date.now() * 0.005) * 0.4;
   });
 

@@ -162,7 +162,7 @@ function animate() {
 
   smallHearts.forEach(h => {
   h.rotation.y += 0.02; // xoay trái tim
-  h.position.y -= 0.03; // tốc độ rơi y hệt chữ
+  h.position.y -= 0.07; // tốc độ rơi y hệt chữ
 
   // nếu trái tim rơi xuống dưới, đặt lại vị trí lên trên giống chữ rơi
   if (h.position.y < -heightRange / 2) {
@@ -181,7 +181,7 @@ function animate() {
 
   // Chữ rơi và nhấp nháy sáng
   texts.forEach(text => {
-    text.position.y -= 0.03;
+    text.position.y -= 0.05;
     if (text.position.y < -heightRange / 2) {
       text.position.y = heightRange / 2;
       text.position.x = (Math.random() - 0.5) * rangeX;

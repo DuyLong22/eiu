@@ -8,7 +8,7 @@
     body {
       margin: 0;
       overflow: hidden;
-      background-color: #1a1a1a;
+      background-color: #000000;
       touch-action: none;
     }
     canvas {
@@ -23,6 +23,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+
   <script>
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -38,7 +39,52 @@
     controls.minDistance = 10;
     controls.maxDistance = 50;
 
-    // Heart shape
+    // ⭐ Tạo sao hình tròn với glow
+    const stars = [];
+    const starTexture = new THREE.TextureLoader().load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/sprites/circle.png');
+    const glowTexture = new THREE.TextureLoader().load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/lensflare/lensflare0.png');
+
+    const starCount = 5000;
+    for (let i = 0; i < starCount; i++) {
+      const coreMaterial = new THREE.SpriteMaterial({
+        map: starTexture,
+        color: 0xffffff,
+        transparent: true,
+        opacity: 1,
+        depthWrite: false
+      });
+      const glowMaterial = new THREE.SpriteMaterial({
+        map: glowTexture,
+        color: 0x88ccff,
+        transparent: true,
+        opacity: 0.4,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+
+      const core = new THREE.Sprite(coreMaterial);
+      const glow = new THREE.Sprite(glowMaterial);
+
+      const position = new THREE.Vector3(
+        (Math.random() - 0.5) * 300,
+        (Math.random() - 0.5) * 300,
+        (Math.random() - 0.5) * 300
+      );
+
+      const scale = 0.5 + Math.random() * 0.5;
+      core.scale.set(scale, scale, scale);
+      glow.scale.set(scale * 3, scale * 3, scale * 3);
+
+      core.position.copy(position);
+      glow.position.copy(position);
+
+      scene.add(glow);
+      scene.add(core);
+
+      stars.push({ core, glow });
+    }
+
+    // 💖 Tạo trái tim rơi
     const heartShape = new THREE.Shape();
     const x = 0, y = 0;
     heartShape.moveTo(x + 5, y + 5);
@@ -49,164 +95,220 @@
     heartShape.bezierCurveTo(x + 16, y + 7, x + 16, y, x + 10, y);
     heartShape.bezierCurveTo(x + 7, y, x + 5, y + 5, x + 5, y + 5);
 
-    // Tạo trái tim nhỏ với hiệu ứng từ code đầu
-// Hàm tính khoảng cách 3D
-function distance3D(a, b) {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  const dz = a.z - b.z;
-  return Math.sqrt(dx*dx + dy*dy + dz*dz);
-}
-
-const extrudeSettings = {
-  steps: 2,
-  depth: 8,
-  bevelEnabled: true,
-  bevelThickness: 2,
-  bevelSize: 2,
-  bevelSegments: 8
-};
-const heartGeometry = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
-const heartMaterial = new THREE.MeshPhongMaterial({ color: 0xff3366, shininess: 100 });
-
-const smallHearts = [];
-const smallHeartCount = 25;
-const smallHeartScale = 0.06;
-const smallHeartRange = 20;
-const minDistance = 2; // Khoảng cách tối thiểu giữa các trái tim
-
-for (let i = 0; i < smallHeartCount; i++) {
-  let position;
-  let tries = 0;
-  do {
-    const xPos = (Math.random() - 0.5) * smallHeartRange;
-    const yPos = 20 + Math.random() * 60;
-    const zPos = (Math.random() - 0.5) * smallHeartRange;
-
-    position = new THREE.Vector3(xPos, yPos, zPos);
-
-    let tooClose = false;
-    for (let h of smallHearts) {
-      if (distance3D(h.position, position) < minDistance) {
-        tooClose = true;
-        break;
-      }
+    function distance3D(a, b) {
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      const dz = a.z - b.z;
+      return Math.sqrt(dx*dx + dy*dy + dz*dz);
     }
-    if (!tooClose) break;
-    tries++;
-  } while (tries < 10);
 
-  const smallHeart = new THREE.Mesh(heartGeometry, heartMaterial.clone());
-  smallHeart.scale.set(smallHeartScale, smallHeartScale, smallHeartScale);
-  smallHeart.position.copy(position);
+    const extrudeSettings = {
+      steps: 2,
+      depth: 8,
+      bevelEnabled: true,
+      bevelThickness: 2,
+      bevelSize: 2,
+      bevelSegments: 8
+    };
+    const heartGeometry = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
+    const heartMaterial = new THREE.MeshPhongMaterial({ color: 0xff3366, shininess: 100 });
 
-  smallHeart.rotation.x = Math.PI; // Lật cho thẳng đứng
-  smallHeart.rotation.y = 0;
+    const smallHearts = [];
+    const smallHeartCount = 25;
+    const smallHeartScale = 0.06;
+    const smallHeartRange = 20;
+    const minDistance = 2;
 
-  scene.add(smallHeart);
-  smallHearts.push(smallHeart);
-}
+    for (let i = 0; i < smallHeartCount; i++) {
+      let position;
+      let tries = 0;
+      do {
+        const xPos = (Math.random() - 0.5) * smallHeartRange;
+        const yPos = 20 + Math.random() * 60;
+        const zPos = (Math.random() - 0.5) * smallHeartRange;
+        position = new THREE.Vector3(xPos, yPos, zPos);
+        let tooClose = false;
+        for (let h of smallHearts) {
+          if (distance3D(h.position, position) < minDistance) {
+            tooClose = true;
+            break;
+          }
+        }
+        if (!tooClose) break;
+        tries++;
+      } while (tries < 10);
 
+      const smallHeart = new THREE.Mesh(heartGeometry, heartMaterial.clone());
+      smallHeart.scale.set(smallHeartScale, smallHeartScale, smallHeartScale);
+      smallHeart.position.copy(position);
+      smallHeart.rotation.x = Math.PI;
+      smallHeart.rotation.y = 0;
+      scene.add(smallHeart);
+      smallHearts.push(smallHeart);
+    }
 
-    // Tải font và tạo chữ rơi
+    // 💬 Tải font và tạo chữ rơi
     const fontLoader = new THREE.FontLoader();
-    fontLoader.load(
-      'font/Be Vietnam Pro Black_Regular.json',
-      function (font) {
-        const messages = [
-          "Anh yêu em",
-          "Cảm ơn vì em đã đến",
-          "Luôn bên em",
-          "Yêu em mãi mãi",
-          "Chỉ cần em là đủ",
-          "Anh sẽ yêu em suốt đời",
-          "Cảm ơn em đã đến bên anh"
-        ];
-        const texts = [];
-        const count = 150;
-        const rangeX = 20;
-        const rangeZ = 15;
-        const heightRange = 50;
+    fontLoader.load('font/Be Vietnam Pro Black_Regular.json', function (font) {
+      const messages = [
+        "Anh yêu em",
+        "Cảm ơn vì em đã đến",
+        "Luôn bên em",
+        "Yêu em mãi mãi",
+        "Chỉ cần em là đủ",
+        "Anh sẽ yêu em suốt đời",
+        "Cảm ơn em đã đến bên anh"
+      ];
+      const texts = [];
+      const count = 150;
+      const rangeX = 20;
+      const rangeZ = 15;
+      const heightRange = 50;
 
-        for (let i = 0; i < count; i++) {
-          const message = messages[Math.floor(Math.random() * messages.length)];
-          const textGeo = new THREE.TextGeometry(message, {
-            font: font,
-            size: 0.5,
-            height: 0.03,
-            curveSegments: 2,
-          });
-          const textMat = new THREE.MeshStandardMaterial({
-            color: 0xff69b4,
-            emissive: 0xff69b4,
-            emissiveIntensity: 1.2,
-          });
-          const textMesh = new THREE.Mesh(textGeo, textMat);
-          const zPos = (Math.random() - 0.5) * rangeZ;
-          const scaleFactor = 1.5 - Math.abs(zPos) * 0.2;
-          textMesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
-          textMesh.position.set(
-            (Math.random() - 0.5) * rangeX,
-            Math.random() * heightRange - heightRange / 2,
-            zPos
-          );
-          scene.add(textMesh);
-          texts.push(textMesh);
+      for (let i = 0; i < count; i++) {
+        const message = messages[Math.floor(Math.random() * messages.length)];
+        const textGeo = new THREE.TextGeometry(message, {
+          font: font,
+          size: 0.5,
+          height: 0.03,
+          curveSegments: 2,
+        });
+        const textMat = new THREE.MeshStandardMaterial({
+          color: 0xff69b4,
+          emissive: 0xff69b4,
+          emissiveIntensity: 1.2,
+        });
+        const textMesh = new THREE.Mesh(textGeo, textMat);
+        const zPos = (Math.random() - 0.5) * rangeZ;
+        const scaleFactor = 1.5 - Math.abs(zPos) * 0.2;
+        textMesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        textMesh.position.set(
+          (Math.random() - 0.5) * rangeX,
+          Math.random() * heightRange - heightRange / 2,
+          zPos
+        );
+        scene.add(textMesh);
+        texts.push(textMesh);
+      }
+
+            // --- SAO BĂNG PHÍA DƯỚI - START ---
+      class Meteor {
+        constructor() {
+          this.material = new THREE.LineBasicMaterial({ color: 0xffffff });
+          this.geometry = new THREE.BufferGeometry();
+          this.line = new THREE.Line(this.geometry, this.material);
+          scene.add(this.line);
+          this.reset();
         }
 
-        const clock = new THREE.Clock();
+        reset() {
+          this.startX = (Math.random() - 0.5) * 100;
+          this.startY = -20 + Math.random() * 10;  // khu vực dưới màn hình
+          this.startZ = -100 - Math.random() * 50;
 
-function animate() {
-  requestAnimationFrame(animate);
-  const delta = clock.getDelta(); // Thời gian trôi qua giữa 2 frame (đơn vị: giây)
+          this.endX = this.startX + 15;
+          this.endY = this.startY - 5;
+          this.endZ = this.startZ + 60;
 
-  smallHearts.forEach(h => {
-    h.rotation.y += 0.02;
-    h.position.y -= 5 * delta; // dùng delta để điều chỉnh tốc độ rơi
+          this.pos = new THREE.Vector3(this.startX, this.startY, this.startZ);
+          this.velocity = new THREE.Vector3(
+            (this.endX - this.startX) * 0.02,
+            (this.endY - this.startY) * 0.02,
+            (this.endZ - this.startZ) * 0.02
+          );
 
-    if (h.position.y < -heightRange / 2) {
-      h.position.y = heightRange / 2;
-      h.position.x = (Math.random() - 0.5) * smallHeartRange;
-      h.position.z = (Math.random() - 0.5) * smallHeartRange;
+          this.updateGeometry();
+        }
 
-      const scaleFactor = 0.1 + Math.random() * 0.05;
-      h.scale.set(scaleFactor, scaleFactor, scaleFactor);
-    }
+        updateGeometry() {
+          const tail = new THREE.Vector3(
+            this.pos.x + 15,
+            this.pos.y - 5,
+            this.pos.z + 60
+          );
+          this.geometry.setFromPoints([this.pos.clone(), tail]);
+        }
 
-    h.material.emissiveIntensity = 1.2 + Math.sin(Date.now() * 0.005 + h.position.x) * 0.4;
-  });
+        update(delta) {
+          this.pos.addScaledVector(this.velocity, delta * 60);
+          this.updateGeometry();
 
-  texts.forEach(text => {
-    text.position.y -= 3 * delta; // tốc độ rơi của chữ (có thể chỉnh 3 thành lớn hơn nếu muốn nhanh hơn)
-
-    if (text.position.y < -heightRange / 2) {
-      text.position.y = heightRange / 2;
-      text.position.x = (Math.random() - 0.5) * rangeX;
-      text.position.z = (Math.random() - 0.5) * rangeZ;
-
-      const zPos = text.position.z;
-      const scaleFactor = 1.5 - Math.abs(zPos) * 0.2;
-      text.scale.set(scaleFactor, scaleFactor, scaleFactor);
-    }
-
-    text.material.emissiveIntensity = 1.2 + Math.sin(Date.now() * 0.005) * 0.4;
-  });
-
-  controls.update();
-  renderer.render(scene, camera);
-}
-
-        animate();
+          if (this.pos.z > 50 || this.pos.x > 100) {
+            scene.remove(this.line);
+            this.line.geometry.dispose();
+            this.line.material.dispose();
+            return false;
+          }
+          return true;
+        }
       }
-    );
 
-    // Ánh sáng
+      const meteors = [];
+      let lastSpawn = 0;
+      const spawnInterval = 5 / 3; // 3 sao băng mỗi 5 giây
+
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+        const time = Date.now() * 0.001;
+
+        smallHearts.forEach(h => {
+          h.rotation.y += 0.02;
+          h.position.y -= 5 * delta;
+          if (h.position.y < -heightRange / 2) {
+            h.position.y = heightRange / 2;
+            h.position.x = (Math.random() - 0.5) * smallHeartRange;
+            h.position.z = (Math.random() - 0.5) * smallHeartRange;
+            const scaleFactor = 0.1 + Math.random() * 0.05;
+            h.scale.set(scaleFactor, scaleFactor, scaleFactor);
+          }
+          h.material.emissiveIntensity = 1.2 + Math.sin(Date.now() * 0.005 + h.position.x) * 0.4;
+        });
+
+        texts.forEach(text => {
+          text.position.y -= 3 * delta;
+          if (text.position.y < -heightRange / 2) {
+            text.position.y = heightRange / 2;
+            text.position.x = (Math.random() - 0.5) * rangeX;
+            text.position.z = (Math.random() - 0.5) * rangeZ;
+            const zPos = text.position.z;
+            const scaleFactor = 1.5 - Math.abs(zPos) * 0.2;
+            text.scale.set(scaleFactor, scaleFactor, scaleFactor);
+          }
+          text.material.emissiveIntensity = 1.2 + Math.sin(Date.now() * 0.005) * 0.4;
+        });
+
+      stars.forEach((s, i) => {
+        const flicker = 0.3 + 0.7 * Math.abs(Math.sin(time * 5 + i * 0.5));
+        s.core.material.opacity = flicker;
+        s.glow.material.opacity = flicker * 0.6;
+      });
+
+              // --- SAO BĂNG PHÍA DƯỚI - UPDATE ---
+        if (clock.elapsedTime - lastSpawn > spawnInterval) {
+          meteors.push(new Meteor());
+          lastSpawn = clock.elapsedTime;
+        }
+
+        for (let i = meteors.length - 1; i >= 0; i--) {
+          if (!meteors[i].update(delta)) {
+            meteors.splice(i, 1);
+          }
+        }
+        
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    });
+
+    // 🌈 Ánh sáng
+    scene.add(new THREE.AmbientLight(0x404040, 0.6));
     const pointLight = new THREE.PointLight(0xffffff, 1.2);
     pointLight.position.set(0, 20, 20);
     scene.add(pointLight);
-
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-    scene.add(ambientLight);
 
     // Camera
     camera.position.set(-5, 10, 25);
